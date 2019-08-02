@@ -1,0 +1,123 @@
+---
+title: "Transformação de dados"
+author: "Adilson dos anjos"
+output:
+  html_document:
+    theme: flatly
+    highlight: pygments
+    toc_depth: 4
+    # code_download: true
+    # code_folding: show
+    toc: true
+    toc_float:
+      collapsed: false
+    # df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Inserção de dados
+
+```{r}
+tr <- read.table('transformacao.txt', header = TRUE)
+```
+
+## Formato
+
+```{r}
+tr$trat <- as.factor(tr$trat)
+```
+
+## Presupostos
+
+## Anova
+
+```{r}
+tr.av <- aov(resp ~ trat, data=tr)
+tr.av
+anova(tr.av)
+```
+
+## Homocedasticidade
+
+```{r}
+plot.default(tr$trat,tr.av$res)
+```
+
+## Normalidade
+
+```{r}
+qqnorm(tr.av$res,ylab="Residuos", main=NULL)
+qqline(tr.av$res)
+title("Grafico Normal de Probabilidade dos Resíduos")
+```
+
+Gráfica mostra uma heterogeneidade de variâncias e QQ-Plot mostra um comportamento dos dados que se afasta muito da distribuição normal. A menssagem é clara, mas testes podem ser feitos para verificar o desvio dos pressupostos.
+
+```{r}
+bartlett.test(tr$resp, tr$trat)
+```
+
+```{r}
+shapiro.test(tr.av$res)
+```
+
+Nos resultados acima a homogeneidade de variâncias foi rejeitada e também a normalidade dos resíduos.
+
+## Transformação Box-Cox
+
+```{r}
+require(MASS)
+box.tr<-boxcox(resp ~ trat, data=tr, plotit=T)
+box.tr<-boxcox(resp ~ trat, data=tr, lam=seq(-1, 1, 1/10))
+```
+
+O gráfico mostra que o valor que maximiza a função é aproximadamente $\hat{\lambda} = 0.19$. Abaixo, uma forma de se obter o valor exato de $\hat{\lambda}$.
+
+```{r}
+lambda <- box.tr$x[which(box.tr$y == max(box.tr$y))] 
+lambda
+```
+
+## Obtenção dos dados transformados
+
+Desta forma o próximo passo é obter os dados transformados e depois realizar as análises utilizando estes novos dados.
+
+```{r}
+tr$respt <- tr$resp^(lambda)
+tr.avt <- aov(respt ~ trat, data=tr)
+```
+
+Note que os resíduos tem um comportamento bem melhor do que o observado para os dados originais. A análise deve prosseguir utilizando-se então os dados transformados.
+
+```{r}
+bartlett.test(tr$respt, tr$trat)
+shapiro.test(tr.avt$res)
+```
+
+NOTA: No gráfico da verossimilhança perfilhada notamos que é mostrado um intervalo de confiança para $\lambda$ e que o valor $0$ está contido neste intervalo. Isto indica que podemos utilizar a transformação logarítimica dos dados e os resultados serão bem próximos dos obtidos com a transformação previamente adotada.
+
+```{r}
+tr.avl <- aov(log(resp) ~ trat, data=tr)
+summary(tr.avl)
+par(mfrow = c(2,2))
+plot(tr.avl)
+par(mfrow = c(1,1))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

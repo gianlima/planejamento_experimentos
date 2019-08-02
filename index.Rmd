@@ -1,0 +1,11 @@
+---
+title: "Análise e planejamento de experimentos"
+---
+
+<div class="panel panel-primary">
+  <div class="panel-heading">Observações</div>
+  <div class="panel-body">
+O presente material foi preparado pelo professor [Adilson dos Anjos](https://docs.ufpr.br/~aanjos/).   
+Esta página serve apenas como visualização dos códigos da [disciplina](https://docs.ufpr.br/~aanjos/CE213/). Conferir a outra aba.
+</div>
+</div>

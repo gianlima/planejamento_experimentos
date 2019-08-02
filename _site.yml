@@ -1,0 +1,30 @@
+name: "my-website"
+output_dir: "docs"
+navbar:
+  title: "Gian Lima"
+  left:
+    - text: "Home"
+      href: https://gianlima.github.io/
+    - text: "Conteúdo"
+      menu:
+      - text: "Conteúdo de Análise e Planejamento de Experimentos"
+      - text: "Apostila online"
+        href: https://docs.ufpr.br/~aanjos/CE213/apostila.pdf
+      - text: "Delineamento Completamente Casualizado"
+        href: delineamento_casualizado.html
+      - text: "Transformação de dados"
+        href: transformacao_dados.html
+      - text: "Delineamento em Blocos Completos Casualizados"
+        href: delineamento_completo.html
+      - text: "Delineamento em Quadrado Latino"
+        href: latino.html
+      - text: "Determinação do Número de Repetições"
+        href: repeticoes.html
+  right:
+    - text: GitHub
+      icon: fa-github fa-lg
+      href: https://github.com/gianlima/planejamento_experimentos
+output:
+  html_document:
+    theme: flatly
+    highlight: pygments

@@ -1,0 +1,143 @@
+---
+title: "Delineamento em Quadrado Latino"
+author: "Adilson dos anjos"
+output:
+  html_document:
+    theme: flatly
+    highlight: pygments
+    toc_depth: 4
+    # code_download: true
+    # code_folding: show
+    toc: true
+    toc_float:
+      collapsed: false
+    # df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Inserção de dados
+
+```{r}
+lat01 <- read.table("latino.txt", header=T)
+library(knitr)
+library(magrittr)
+library(kableExtra) 
+lat01 %>%
+  kable() %>%
+  kable_styling()
+```
+
+## Explorando os dados
+
+```{r}
+names(lat01)
+summary(lat01)
+
+attach(lat01)
+
+plot(resp ~ col + linha + trat)
+
+lat01.mt <- tapply(resp, trat, mean)
+lat01.mt
+lat01.ml <- tapply(resp, linha, mean)
+lat01.ml
+lat01.mc <- tapply(resp, col, mean)
+lat01.mc
+
+plot.default(trat, resp)
+points(lat01.mt, pch="x", col=2, cex=1.5)
+```
+
+
+Nos gráficos e resultados acima procuramos captar os principais aspectos dos dados bem como verificar se não há interação entre linhas, colunas e tratamentos, o que não deve acontecer neste tipo de experimento. 
+A seguir vamos ajustar o modelo e obter outros resultados, incluindo a análise de resíduos e testes para verificar a validades dos pressupostos do modelo.
+
+## ANOVA
+
+```{r}
+lat01.av <- aov(resp ~ col + linha + trat)
+anova(lat01.av)
+names(lat01.av)
+```
+ 
+## Análise de resíduos
+Graficamente
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(lat01.av)
+```
+
+## Homocedasticidade, Normalidade e Independência
+
+```{r}
+residuos <- (lat01.av$residuals)
+
+par(mfrow=c(2,2))
+
+plot(lat01$trat,residuos)
+title("Resíduos vs Estágios \n Homocedasticidade")
+
+preditos <- (lat01.av$fitted.values)
+
+plot(residuos,preditos)
+title("Resíduos vs Preditos \n Independência")
+
+qqnorm(residuos,ylab="Residuos", main=NULL)
+qqline(residuos)
+title("Grafico Normal de \n Probabilidade dos Resíduos")
+
+par(mfrow=c(2,1))
+
+respad <- (residuos/sqrt(anova(lat01.av)$"Mean Sq"[4]))
+boxplot(respad)
+title("Resíduos Padronizados - outliers")
+
+outlier<-c(max(respad),min(respad))
+outlier
+```
+
+## Teste para Normalidade dos Resíduos
+```{r}
+shapiro.test(residuos)
+```
+
+Como foi detectado efeito de tratamentos faz-se um teste de comparações múltiplas e encerra-se as análises desanexando o objeto do caminho de procura.
+
+## Teste para Comparações Múltiplas
+```{r}
+lat01.tk <- TukeyHSD(lat01.av, "trat", ord=T)
+lat01.tk
+plot(lat01.tk)
+
+detach(lat01)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

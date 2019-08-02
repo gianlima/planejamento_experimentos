@@ -1,0 +1,54 @@
+---
+title: "Determinação do Número de Repetições"
+author: "Adilson dos anjos"
+output:
+  html_document:
+    theme: flatly
+    highlight: pygments
+    toc_depth: 4
+    # code_download: true
+    # code_folding: show
+    toc: true
+    toc_float:
+      collapsed: false
+    # df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Objetivo:Calcular o número de repetições de um experimento através do método de Tukey.
+
+A expressão para definição do número de repetições é definada por
+
+$$r\ =\ \frac{q^2s^2F}{d^2}$$
+
+## Criando uma Função
+No R(), pode-se criar uma função que realiza este cálculo para um experimento em bolcos completos casualizados:
+
+```{r}
+function(n2,s,t,d,ri,alpha=0.95)
+{
+## Cálculo do número de repetições para um experimento em BCC
+
+## n2 = graus de liberdade do resíduo de um experimento anterior
+## s  = desvio padrão da variável resposta
+## t  = número de tratamentos
+## d  = diferença significativa
+## ri = número inicial de repetições 
+
+df.res<-(ri*t-1)-(ri-1)-(t-1)
+q<-qtukey(alpha,t,df.res)
+f<-qf(alpha,df.res,n2)
+r<-(q^2*s^2*f)/(d^2)
+return(r,df.res,q,f)
+}
+```
+
+Para um experimento conduzido em outro delineamento, baste redefinir df.res.
+
+Utilizando a informação do CV
+Para calcular o número de repetições através do CV, basta substituir o valor de s pelo CV% e o valor de d por d%.
+
+

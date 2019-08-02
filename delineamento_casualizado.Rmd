@@ -1,0 +1,215 @@
+---
+title: "Delineamento Completamente Casualizado"
+author: "Adilson dos anjos"
+output:
+  html_document:
+    theme: flatly
+    highlight: pygments
+    toc_depth: 4
+    # code_download: true
+    # code_folding: show
+    toc: true
+    toc_float:
+      collapsed: false
+    # df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+[Dados](https://docs.ufpr.br/~aanjos/CE213/dados/exemplo01.txt) como exemplo
+
+#### Carregar os dados
+```{r}
+ex01 <- read.table("dados.txt", header = TRUE)
+```
+
+#### As variáveis precisam estar nessas classes
+```{r, eval=FALSE, include=FALSE}
+is.factor(ex01$trat)
+is.numeric(ex01$resp)
+```
+
+#### Resumo dos dados
+```{r}
+summary(ex01)
+```
+
+#### Média de cada tratamento
+
+```{r}
+tapply(ex01$resp, ex01$trat, mean)
+```
+
+#### Variância dos tratamentos
+
+```{r}
+tapply(ex01$resp, ex01$trat, var)
+```
+
+
+#### Tabela da ANOVA
+
+Teste para saber se há diferença entre os tratamentos.
+
+$$H_0: \mu_1 = \mu_2 = ... = \mu_i$$ 
+$$H_1: \mu_i \neq \mu_j$$
+#### Mesma coisa que:
+
+$$H_0: \text{Diferença entre tratamentos não é significativa}$$
+$$H_0: \text{Diferença entre tratamentos é significativa}$$
+
+```{r}
+ex01.av <- aov(resp ~ trat, data = ex01)
+summary(ex01.av)
+anova(ex01.av)
+```
+
+#### Conferindo Homocedasticidade
+
+$$H_0: \sigma^2_1 = \sigma^2_2 = ... = \sigma^2_i $$
+$$H_1: \sigma^2_i \neq \sigma^2_{i'} \text{ para pelo menos um } i \neq i'$$
+
+#### Conferindo com bloxplot Tratamentos x Resíduos
+```{r}
+boxplot(ex01.av$res ~ ex01$trat,ylab="Resíduos",xlab="Linhagens")
+```
+
+####Conferindo com Scatterplot Tratamentos x Resíduos
+```{r}
+plot.default(ex01$trat,ex01.av$res,ylab="Resíduos",xlab="Linhagens")
+```
+
+#### Conferindo com o teste Bartlett
+```{r}
+bartlett.test(ex01.av$res, ex01$trat)
+```
+
+
+#### Conferindo normalidade 
+
+$$H_0: \text{erros possuem distribuição normal}$$
+$$H_1: \text{erros não possuem distribuição normal}$$
+#### Conferindo normalidade com histograma dos resíduos
+
+```{r}
+hist(ex01.av$res, main=NULL)
+title("Histograma dos Resíduos")
+```
+
+#### Conferindo normalidade com gráfico de ramo e folhas
+
+```{r}
+stem(ex01.av$res)
+```
+
+#### Conferindo normalidade com o gráfico normal de probabilidade dos resíduos
+
+```{r}
+qqnorm(ex01.av$res,ylab="Resíduos", main=NULL)
+qqline(ex01.av$res)
+title("Grafico Normal de Probabilidade dos Resíduos")
+```
+
+#### Conferindo normalidade com o teste Shapiro-Wilk
+
+```{r}
+shapiro.test(ex01.av$res)
+```
+
+#### Conferindo independência
+
+#### Conferindo independência com o gráfico Scatterplot Valores ajustados x Resíduos
+
+```{r}
+plot(ex01.av$fit, ex01.av$res, xlab="valores ajustados", ylab="resíduos")
+title("resíduos vs Preditos")
+```
+
+#### Conferindo independência com o gráfico Scatterplot Valores ajustados Ordenados x Resíduos
+
+```{r}
+plot(ex01.av$fit, order(ex01.av$res), xlab="valores ajustados", ylab="resíduos")
+title("resíduos vs Preditos")
+```
+
+
+#### Verificação de Outliers
+
+
+```{r}
+
+par(mfrow=c(2,2))
+plot(ex01.av)
+par(mfrow=c(1,1))
+
+names(anova(ex01.av))
+s2 <- anova(ex01.av)$Mean[2]   #### estimativa da variância
+
+res <- ex01.av$res           #### extraindo resíduos
+respad <- (res/sqrt(s2))  #### resíduos padronizados 
+
+boxplot(respad)
+title("Resíduos Padronizados" )
+
+plot.default(ex01$trat,respad, xlab="Linhagens")
+title("Resíduos Padronizados" )
+```
+
+
+
+#### Teste Tukey
+
+$$H_0: \mu_i = \mu_j$$
+$$H_1: \mu_i \neq \mu_j$$
+#### Mesma coisa que 
+
+$$H_0: \text{o constraste não é significativo}$$
+$$H_1: \text{o constraste é significativo}$$
+
+Se 0 não estiver incluído no intervalo, rejeita-se a hipóte-se nula.
+
+```{r}
+ex01.tu <- TukeyHSD(ex01.av)
+ex01.tu
+plot(ex01.tu)
+```
+
+####Observando contrastes específicos de interesse
+
+$$y_1 = 1/4 L_1 + 1/4 L_2 + 1/4 L_3 + 1/4 L_4 - 1/5 L_5 - 1/5 L_6 - 1/5 L_7 - 1/5 L_8 - 1/5 L_9$$
+$$y_2 = 1L_1 + 1L_2 - 1L_3 - 1L_4$$
+$$y_3 = 1L_1 - 1L_2$$
+$$y_4 = 1L_3 - 1L_4$$
+$$y_5 = 1L_5 + 1L_6 + 1L_7 + 1L_8 - 4L_9$$
+$$y_6 = 1L_5 + 1L_6 - 1L_7 - 1L_8$$
+$$y_7 = 1L_5 - 1 L_6$$
+$$y_8 = 1L_7 - 1L_8$$
+
+#### Colocar os contrastes numa matriz
+
+```{r}
+cont.ex01<-matrix(c(.25,.25,.25,.25,-.2,-.2,-.2,-.2,-.2,1,1,-1,-1,0,0,0,0,0,1,-1,0,0,0,0,0,0,0,0,0,1,-1,0,0,0,0,0,0,0,0,0,1,1,1,1,-4,0,0,0,0,1,1,-1,-1,0,0,0,0,0,1,-1,0,0,0,0,0,0,0,0,0,1,-1,0),nrow=9,ncol=8,byrow=F)
+cont.ex01
+```
+
+#### Analisar os contrastes
+
+```{r}
+contrasts(ex01$trat) <- cont.ex01
+```
+
+#### Análise de Variância 
+
+```{r}
+ex01.av<-aov(resp ~ trat,data=ex01)
+```
+
+#### Contrastes significativos
+
+```{r}
+summary.aov(ex01.av,split=list(trat=list(y1=1,y2=2,y3=3,y4=4,y5=5,y6=6, y7=7,y8=8)))
+```
+
+

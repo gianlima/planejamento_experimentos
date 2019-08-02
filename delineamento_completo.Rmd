@@ -1,0 +1,120 @@
+---
+title: "Delineamento em Blocos Completos Casualizados"
+author: "Adilson dos anjos"
+output:
+  html_document:
+    theme: flatly
+    highlight: pygments
+    toc_depth: 4
+    # code_download: true
+    # code_folding: show
+    toc: true
+    toc_float:
+      collapsed: false
+    # df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Trabalhando com o arquivo de dados
+
+Serão utilizados os dados do experimento sobre percentual de óleo em S. linicola em diferentes estágios de crescimento, conduzido no Delineamento em Blocos Completos Casualizados. 
+
+```{r}
+bc01 <- read.table("completos.txt", header=T)
+library(knitr)
+kable(bc01)
+```
+
+```{r}
+names(bc01)
+summary(bc01)
+
+attach(bc01)
+
+plot(resp ~ estag + bloco)
+
+bc01.mt <- tapply(resp, estag, mean)
+bc01.mt
+bc01.mb <- tapply(resp, bloco, mean)
+bc01.mb
+
+plot.default(estag, resp)
+points(bc01.mt, pch="x", col=2, cex=1.5)
+
+plot.default(bloco, resp)
+points(bc01.mb, pch="x", col=2, cex=1.5)
+```
+
+Nos gráficos e resultados acima procuramos captar os principais aspectos dos dados bem como verificar se não há interação entre blocos e tratamentos, o que não deve acontecer neste tipo de experimento. 
+A seguir vamos ajustar o modelo e obter outros resultados, incluindo a análise de resíduos e testes para verificar a validades dos pressupostos do modelo.
+
+## ANOVA
+
+```{r}
+bc01.av <- aov(resp ~ bloco + estag)
+anova(bc01.av)
+
+names(bc01.av)
+```
+
+##  Análise de resíduos
+
+Graficamente
+
+```{r}
+par(mfrow=c(2,2))
+plot(bc01.av)
+```
+
+
+## Homocedasticidade, Normalidade e Independência
+
+```{r}
+residuos <- (bc01.av$residuals)
+
+par(mfrow=c(2,2))
+
+plot(bc01$estag,residuos)
+title("Resíduos vs Estágios \n Homocedasticidade")
+
+preditos <- (bc01.av$fitted.values)
+
+plot(residuos,preditos)
+title("Resíduos vs Preditos \n Independência")
+
+qqnorm(residuos,ylab="Residuos", main=NULL)
+qqline(residuos)
+title("Grafico Normal de \n Probabilidade dos Resíduos")
+
+par(mfrow=c(2,1))
+
+respad <- (residuos/sqrt(anova(bc01.av)$"Mean Sq"[2]))
+boxplot(respad)
+title("Resíduos Padronizados - outliers")
+
+plot(bc01$bloco,residuos)
+title("Resíduos vs Blocos")
+```
+
+Teste para Normalidade dos Resíduos
+
+```{r}
+shapiro.test(residuos)
+```
+
+Como foi detectado efeito de tratamentos faz-se um teste de comparações múltiplas e encerra-se as análises desanexando o objeto do caminho de procura.
+
+## Teste para Comparações Múltiplas
+
+```{r}
+bc01.tk <- TukeyHSD(bc01.av, "estag", ord=T)
+bc01.tk
+plot(bc01.tk)
+
+detach(bc01)
+```
+
+
